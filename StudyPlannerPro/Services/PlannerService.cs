@@ -21,17 +21,31 @@ namespace StudyPlannerPro.Services
             double baseLoad = (difficulty * importance) / (double)daysRemaining;
             return Math.Round(baseLoad, 2);
         }
-        public List<string> GenerateDailyPlan(double totalHours, DateTime examDate)
+        public List<string> GenerateDailyPlan(double totalHours, double completedHours, DateTime examDate)
         {
+            var plan = new List<string>();
             int daysLeft = GetDaysRemaining(examDate);
-            if (daysLeft <= 0) return new List<string> { "Esame oggi o già passato!" };
 
-            double hoursPerDay = Math.Round(totalHours / daysLeft, 1);
-            
-            return new List<string> 
-            { 
-                $"Devi studiare circa {hoursPerDay} ore al giorno per i prossimi {daysLeft} giorni." 
-            };
+            if (daysLeft <= 0)
+            {
+                plan.Add("L'esame è oggi! Ripassa i concetti chiave e riposati.");
+                return plan;
+            }
+
+            // Calcoliamo quanto manca davvero
+            double remainingHours = totalHours - completedHours;
+
+            if (remainingHours <= 0)
+            {
+                plan.Add("Complimenti! Hai completato lo studio previsto per questo esame. 🎉");
+            }
+            else
+            {
+                double hoursPerDay = Math.Round(remainingHours / daysLeft, 1);
+                plan.Add($"Ti mancano {remainingHours} ore. Devi studiare circa {hoursPerDay} ore al giorno per i prossimi {daysLeft} giorni.");
+            }
+
+            return plan;
         }
     }
 }
