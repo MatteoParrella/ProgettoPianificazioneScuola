@@ -12,10 +12,10 @@ public class Exam {
     public int Importance { get; set; }
     
     public int SubjectId { get; set; }
-    public int UserId { get; set; }
     
     // Stato di avanzamento
     public bool IsCompleted { get; set; } = false;
     public double EstimatedTotalHours { get; set; } // Ore totali stimate per prepararsi
     public double CompletedHours { get; set; } = 0; // Ore già studiate
+    public string UserId { get; set; } = string.Empty;
 }

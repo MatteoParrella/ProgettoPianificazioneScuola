@@ -2,202 +2,121 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>StudyPlannerPro - Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyPlannerPro - Benvenuto</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; transition: background 0.3s; }
-    .card-plan { border-left: 5px solid #0d6efd; transition: transform 0.2s; }
-    .card-plan:hover { transform: translateY(-3px); }
-    
-    /* Stili per Modalità Notte */
-    body.dark-mode { background-color: #1a1d20 !important; color: #f8f9fa !important; }
-    .dark-mode .card { background-color: #2b3035 !important; color: white !important; border-color: #444; }
-    .dark-mode .alert-info { background-color: #084298; color: #cfe2ff; border: none; }
-    
-    /* QUESTA È LA PARTE MANCANTE: Forza il testo chiaro in Dark Mode */
-    body.dark-mode .text-muted, 
-    body.dark-mode small, 
-    body.dark-mode h5,
-    body.dark-mode h3 { 
-        color: #dee2e6 !important; 
-    }
-</style>
+    <style>
+        :root { --glass: rgba(255, 255, 255, 0.1); --glass-border: rgba(255, 255, 255, 0.2); }
+        
+        body {
+            margin: 0; padding: 0;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            font-family: 'Segoe UI', sans-serif; color: white;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            width: 100%; max-width: 400px;
+            text-align: center;
+        }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white; transition: 0.3s;
+            border-radius: 10px; padding: 12px;
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.4);
+            color: white; transform: translateY(-2px);
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white; margin-bottom: 20px;
+        }
+
+        .form-control::placeholder { color: rgba(255, 255, 255, 0.6); }
+        .form-control:focus { background: rgba(255, 255, 255, 0.2); color: white; border-color: white; box-shadow: none; }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>🎓 StudyPlanner Pro</h1>
-            <button id="dark-mode-btn" onclick="toggleDarkMode()" class="btn btn-outline-secondary btn-sm">🌙 Modalità Notte</button>
-        </div>
 
-        <div class="alert alert-info shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-                <strong>Obiettivo di oggi:</strong> Studiare un totale di <span id="total-hours">0</span> ore.
-            </div>
-            <span id="summary-message" class="badge bg-dark">Caricamento...</span>
-        </div>
+    <div class="glass-card">
+        <h1 class="mb-4">🎓 StudyPlanner</h1>
+        <p class="mb-5 text-light opacity-75">Organizza i tuoi esami con stile.</p>
         
-        <div id="exams-list" class="row">
-            </div>
-
-        <hr class="my-5">
-
-        <div class="card p-4 shadow-sm mb-5">
-            <h3>Aggiungi Nuovo Esame</h3>
-            <div class="row g-3">
-                <div class="col-md-4"><input type="text" id="title" class="form-control" placeholder="Titolo Esame"></div>
-                <div class="col-md-3"><input type="date" id="date" class="form-control"></div>
-                <div class="col-md-2"><input type="number" id="hours" class="form-control" placeholder="Ore Totali"></div>
-                <div class="col-md-3"><button onclick="addExam()" class="btn btn-primary w-100">Salva Esame</button></div>
-            </div>
+        <div id="auth-form">
+            <input type="email" id="email" class="form-control" placeholder="Email">
+            <input type="password" id="password" class="form-control" placeholder="Password">
+            
+            <button onclick="login()" class="btn btn-glass w-100 mb-3">Accedi</button>
+            <button onclick="register()" class="btn btn-link text-white-50 text-decoration-none small">Non hai un account? Registrati</button>
         </div>
     </div>
 
     <script>
-        // --- FUNZIONI DI INTERFACCIA ---
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            const btn = document.getElementById('dark-mode-btn');
-            btn.innerText = isDark ? "☀️ Modalità Luce" : "🌙 Modalità Notte";
-            
-            // Applica le classi di Bootstrap alle card esistenti
-            document.querySelectorAll('.card').forEach(card => {
-                card.classList.toggle('bg-dark', isDark);
-                card.classList.toggle('text-white', isDark);
-            });
-        }
+        async function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-        async function updateSummary() {
-            try {
-                const response = await fetch('/api/Exams/summary');
-                const data = await response.json();
-                document.getElementById('total-hours').innerText = data.totalHours;
-                document.getElementById('summary-message').innerText = data.message;
-            } catch (error) {
-                console.error("Errore riepilogo:", error);
-            }
-        }
+            if (!email || !password) return alert("Inserisci email e password!");
 
-        // --- LOGICA ESAMI ---
-        async function loadExams() {
-            const response = await fetch('/api/Exams');
-            const exams = await response.json();
-            const container = document.getElementById('exams-list');
-            container.innerHTML = '';
-
-            for (const ex of exams) {
-                const stressRes = await fetch(`/api/Exams/${ex.id}/stress-level`);
-                const stressData = await stressRes.json();
-                
-                let badgeColor = "bg-success"; 
-                if (stressData.status.includes("Giallo")) badgeColor = "bg-warning text-dark";
-                if (stressData.status.includes("Rosso")) badgeColor = "bg-danger";
-
-                let progress = Math.min(100, Math.round((ex.completedHours / ex.estimatedTotalHours) * 100));
-                let isDone = ex.completedHours >= ex.estimatedTotalHours;
-                let cardStyle = isDone ? "border-left: 5px solid #198754; background-color: rgba(25, 135, 84, 0.1);" : "";
-
-                container.innerHTML += `
-                    <div class="col-md-6 mb-3">
-                        <div class="card card-plan p-3 shadow-sm" style="${cardStyle}">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="mb-0">${isDone ? '✅ ' : ''}${ex.title}</h5>
-                                <span class="badge ${isDone ? 'bg-success' : badgeColor}">
-                                    ${isDone ? 'Completato' : stressData.status}
-                                </span>
-                            </div>
-                            
-                            <div class="progress mb-3" style="height: 10px;">
-                                <div class="progress-bar ${isDone ? 'bg-success' : ''}" role="progressbar" style="width: ${progress}%"></div>
-                            </div>
-                            
-                            <p class="small text-muted mb-3">
-                                <strong>${ex.completedHours}h</strong> su ${ex.estimatedTotalHours}h completate (${progress}%)
-                                <br>
-                                <small>Scadenza: ${new Date(ex.examDate).toLocaleDateString()}</small>
-                            </p>
-
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-sm btn-success" onclick="logHours(${ex.id})" ${isDone ? 'disabled' : ''}>➕ Studia</button>
-                                <button class="btn btn-sm btn-primary" onclick="getPlan(${ex.id})">💡 Piano</button>
-                                <button class="btn btn-sm btn-outline-warning" style="color: #ffc107 !important;" onclick="resetHours(${ex.id})">🔄 Reset</button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteExam(${ex.id})">Elimina</button>
-                            </div>
-                        </div>
-                    </div>`;
-            }
-            if (document.body.classList.contains('dark-mode')) {
-                document.querySelectorAll('.card').forEach(c => {
-                    c.classList.add('bg-dark', 'text-white');
-                });
-            }
-            await updateSummary();
-        }
-
-        async function logHours(id) {
-            const hours = prompt("Quante ore hai studiato?");
-            if (hours && !isNaN(hours)) {
-                await fetch(`/api/Exams/${id}/add-hours`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(parseFloat(hours))
-                });
-                loadExams();
-            }
-        }
-
-        async function resetHours(id) {
-            if (confirm("Azzerare il progresso di questo esame?")) {
-                const response = await fetch(`/api/Exams/${id}/reset-hours`, { 
-                    method: 'POST',
-                    headers: {
-                        'Content-Length': '0' // Alcuni server lo richiedono per i POST vuoti
-                    }
-                });
-                
-                if (response.ok) {
-                    loadExams();
-                } else {
-                    console.error("Errore server:", response.status);
-                    alert("Errore nel reset. Controlla la console.");
-                }
-            }
-        }
-
-        async function addExam() {
-            const data = {
-                title: document.getElementById('title').value,
-                examDate: document.getElementById('date').value,
-                estimatedTotalHours: parseFloat(document.getElementById('hours').value),
-                difficulty: 3, importance: 3 
-            };
-            await fetch('/api/Exams', {
+            const response = await fetch('/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify({ email, password })
             });
-            // Pulisce il form
-            document.getElementById('title').value = '';
-            document.getElementById('hours').value = '';
-            loadExams();
-        }
 
-        async function getPlan(id) {
-            const response = await fetch(`/api/Exams/${id}/piano-giornaliero`);
-            const data = await response.json();
-            alert(data.suggerimento[0]);
-        }
-
-        async function deleteExam(id) {
-            if (confirm("Eliminare definitivamente l'esame?")) {
-                await fetch(`/api/Exams/${id}`, { method: 'DELETE' });
-                loadExams();
+            if (response.ok) {
+                alert("Registrazione completata! Ora puoi effettuare l'accesso.");
+            } else {
+                const errorData = await response.json();
+                // Estraiamo il primo errore utile per l'utente
+                let msg = "Errore nella registrazione.";
+                if (errorData.errors) {
+                    msg = Object.values(errorData.errors).flat().join("\n");
+                }
+                alert(msg);
             }
         }
 
-        // Avvio iniziale
-        loadExams();
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // 'useCookies=true' dice al server di rilasciare il cookie .AspNetCore.Identity.Application
+            const response = await fetch('/auth/login?useCookies=true', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                console.log("Login riuscito, reindirizzamento...");
+                // Piccolo trucco: forziamo il refresh per assicurarci che il cookie sia attivo
+                window.location.replace('/dashboard.html');
+            } else {
+                alert("Credenziali errate o account inesistente.");
+            }
+        }
     </script>
 </body>
 </html>

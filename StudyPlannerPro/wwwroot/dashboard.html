@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyPlannerPro - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; transition: background 0.3s; }
+        .card-plan { border-left: 5px solid #0d6efd; transition: transform 0.2s; }
+        .card-plan:hover { transform: translateY(-3px); }
+        
+        /* Stili per Modalità Notte */
+        body.dark-mode { background-color: #1a1d20 !important; color: #f8f9fa !important; }
+        .dark-mode .card { background-color: #2b3035 !important; color: white !important; border-color: #444; }
+        .dark-mode .alert-info { background-color: #084298; color: #cfe2ff; border: none; }
+        .dark-mode .form-control { background-color: #3b4248; border-color: #555; color: white; }
+        .dark-mode .form-control::placeholder { color: #aaa; }
+
+        body.dark-mode .text-muted, 
+        body.dark-mode small, 
+        body.dark-mode h5,
+        body.dark-mode h3 {
+            color: #dee2e6 !important; 
+        }
+
+        @media print {
+            .btn, hr, .card p button, .mb-5.card, #auth-section { display: none !important; }
+            body { background-color: white !important; color: black !important; }
+            .card { border: 1px solid #ccc !important; break-inside: avoid; }
+            .alert-info { border: 1px solid #0dcaf0 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>🎓 StudyPlanner Pro</h1>
+            <div id="auth-section">
+                <button onclick="logout()" class="btn btn-outline-danger btn-sm me-2">🚪 Logout</button>
+                <button onclick="window.print()" class="btn btn-outline-primary btn-sm me-2">🖨️ Stampa</button>
+                <button id="dark-mode-btn" onclick="toggleDarkMode()" class="btn btn-outline-secondary btn-sm">🌙 Modalità Notte</button>
+            </div>
+        </div>
+
+        <div class="alert alert-info shadow-sm d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Obiettivo di oggi:</strong> Studiare un totale di <span id="total-hours">0</span> ore.
+            </div>
+            <span id="summary-message" class="badge bg-dark">Caricamento...</span>
+        </div>
+        
+        <div id="exams-list" class="row">
+        </div>
+
+        <hr class="my-5">
+
+        <div class="card p-4 shadow-sm mb-5">
+            <h3>Aggiungi Nuovo Esame</h3>
+            <div class="row g-3">
+                <div class="col-md-4"><input type="text" id="title" class="form-control" placeholder="Titolo Esame"></div>
+                <div class="col-md-3"><input type="date" id="date" class="form-control"></div>
+                <div class="col-md-2"><input type="number" id="hours" class="form-control" placeholder="Ore Totali"></div>
+                <div class="col-md-3"><button onclick="addExam()" class="btn btn-primary w-100">Salva Esame</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- INIZIALIZZAZIONE ---
+        document.addEventListener("DOMContentLoaded", () => {
+            // Blocca la selezione di date passate nel calendario nativo
+            const dateInput = document.getElementById('date');
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.setAttribute('min', today);
+            
+            loadExams();
+        });
+
+        // --- SICUREZZA E LOGIN ---
+        async function checkAuth() {
+            const response = await fetch('/api/Exams/summary');
+            if (response.status === 401) {
+                window.location.href = '/index.html';
+            }
+        }
+
+        function logout() {
+            window.location.href = '/index.html';
+        }
+
+        // --- INTERFACCIA ---
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            const btn = document.getElementById('dark-mode-btn');
+            btn.innerText = isDark ? "☀️ Modalità Luce" : "🌙 Modalità Notte";
+            loadExams();
+        }
+
+        // --- LOGICA DATI ---
+        async function loadExams() {
+            await checkAuth();
+            try {
+                const response = await fetch('/api/Exams');
+                const exams = await response.json();
+                const container = document.getElementById('exams-list');
+                const isDark = document.body.classList.contains('dark-mode');
+                container.innerHTML = '';
+
+                for (const ex of exams) {
+                    const stressRes = await fetch(`/api/Exams/${ex.id}/stress-level`);
+                    const stressData = await stressRes.json();
+                    
+                    let badgeColor = "bg-success"; 
+                    if (stressData.status.includes("Giallo")) badgeColor = "bg-warning text-dark";
+                    if (stressData.status.includes("Rosso")) badgeColor = "bg-danger";
+
+                    let progress = Math.min(100, Math.round((ex.completedHours / ex.estimatedTotalHours) * 100));
+                    let isDone = ex.completedHours >= ex.estimatedTotalHours;
+                    let cardBg = isDark ? 'bg-dark text-white' : '';
+                    let completedStyle = isDone ? "border-left: 5px solid #198754; opacity: 0.9;" : "";
+
+                    container.innerHTML += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card card-plan p-3 shadow-sm ${cardBg}" style="${completedStyle}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="mb-0">${isDone ? '✅ ' : ''}${ex.title}</h5>
+                                    <span class="badge ${isDone ? 'bg-success' : badgeColor}">
+                                        ${isDone ? 'Completato' : stressData.status}
+                                    </span>
+                                </div>
+                                <div class="progress mb-3" style="height: 10px;">
+                                    <div class="progress-bar ${isDone ? 'bg-success' : ''}" role="progressbar" style="width: ${progress}%"></div>
+                                </div>
+                                <p class="small mb-3 ${isDark ? 'text-light' : 'text-muted'}">
+                                    <strong>${ex.completedHours}h</strong> su ${ex.estimatedTotalHours}h (${progress}%)
+                                    <br>
+                                    <small>Scadenza: ${new Date(ex.examDate).toLocaleDateString()}</small>
+                                </p>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-sm btn-success" onclick="logHours(${ex.id})" ${isDone ? 'disabled' : ''}>➕ Studia</button>
+                                    <button class="btn btn-sm btn-primary" onclick="getPlan(${ex.id})">💡 Piano</button>
+                                    <button class="btn btn-sm btn-outline-warning" style="color: #ffc107 !important; border-color: #ffc107;" onclick="resetHours(${ex.id})">🔄 Reset</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteExam(${ex.id})">Elimina</button>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+                updateSummary();
+            } catch (e) { console.error("Errore caricamento esami"); }
+        }
+
+        async function updateSummary() {
+            const response = await fetch('/api/Exams/summary');
+            if(response.ok) {
+                const data = await response.json();
+                document.getElementById('total-hours').innerText = data.totalHours;
+                document.getElementById('summary-message').innerText = data.message;
+            }
+        }
+
+        async function logHours(id) {
+            const hours = prompt("Quante ore hai studiato?");
+            if (hours && !isNaN(hours)) {
+                await fetch(`/api/Exams/${id}/add-hours`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(parseFloat(hours))
+                });
+                loadExams();
+            }
+        }
+
+        async function resetHours(id) {
+            if (confirm("Vuoi azzerare il progresso di questo esame?")) {
+                await fetch(`/api/Exams/${id}/reset-hours`, { method: 'POST' });
+                loadExams();
+            }
+        }
+
+        async function addExam() {
+            const title = document.getElementById('title').value;
+            const dateStr = document.getElementById('date').value;
+            const hours = document.getElementById('hours').value;
+
+            if(!title || !dateStr || !hours) return alert("Compila tutti i campi!");
+
+            // Controllo logico data passata
+            const selectedDate = new Date(dateStr);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (selectedDate < today) {
+                return alert("Non puoi inserire un esame in una data passata!");
+            }
+
+            await fetch('/api/Exams', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: title,
+                    examDate: dateStr,
+                    estimatedTotalHours: parseFloat(hours)
+                })
+            });
+            document.getElementById('title').value = '';
+            document.getElementById('hours').value = '';
+            document.getElementById('date').value = '';
+            loadExams();
+        }
+
+        async function getPlan(id) {
+            const response = await fetch(`/api/Exams/${id}/piano-giornaliero`);
+            const data = await response.json();
+            alert(data.suggerimento);
+        }
+
+        async function deleteExam(id) {
+            if (confirm("Eliminare l'esame?")) {
+                await fetch(`/api/Exams/${id}`, { method: 'DELETE' });
+                loadExams();
+            }
+        }
+    </script>
+</body>
+</html>
