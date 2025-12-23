@@ -21,5 +21,17 @@ namespace StudyPlannerPro.Services
             double baseLoad = (difficulty * importance) / (double)daysRemaining;
             return Math.Round(baseLoad, 2);
         }
+        public List<string> GenerateDailyPlan(double totalHours, DateTime examDate)
+        {
+            int daysLeft = GetDaysRemaining(examDate);
+            if (daysLeft <= 0) return new List<string> { "Esame oggi o già passato!" };
+
+            double hoursPerDay = Math.Round(totalHours / daysLeft, 1);
+            
+            return new List<string> 
+            { 
+                $"Devi studiare circa {hoursPerDay} ore al giorno per i prossimi {daysLeft} giorni." 
+            };
+        }
     }
 }

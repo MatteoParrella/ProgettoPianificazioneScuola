@@ -16,4 +16,5 @@ public class Exam {
     
     // Stato di avanzamento
     public bool IsCompleted { get; set; } = false;
+    public double EstimatedTotalHours { get; set; } // Ore totali stimate per prepararsi
 }

@@ -30,5 +30,4 @@ app.UseHttpsRedirection();
 
 // 4. Mappa i controller (questo sostituisce i MapGet manuali)
 app.MapControllers();
-
 app.Run();
