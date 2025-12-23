@@ -32,19 +32,19 @@ public class ExamsController : ControllerBase
         return CreatedAtAction(nameof(GetExams), new { id = exam.Id }, exam);
     }
     [HttpGet("{id}/stress-level")]
-    public async Task<ActionResult<object>> GetStressLevel(int id, [FromServices] StudyPlannerPro.Services.PlannerService planner)
+        public async Task<ActionResult<object>> GetStressLevel(int id, [FromServices] StudyPlannerPro.Services.PlannerService planner)
     {
         var exam = await _context.Exams.FindAsync(id);
         if (exam == null) return NotFound();
 
         int days = planner.GetDaysRemaining(exam.ExamDate);
-        double load = planner.CalculateStudyLoad(exam.Difficulty, exam.Importance, days);
+        
+        // Calcoliamo lo stress basandoci sulle ore REALI al giorno
+        double hoursPerDay = exam.EstimatedTotalHours / (days > 0 ? days : 1);
 
         return new {
             ExamTitle = exam.Title,
-            DaysRemaining = days,
-            StressScore = load,
-            Status = load > 5 ? "Rosso (Urgente)" : load > 2 ? "Giallo (Attenzione)" : "Verde (Tranquillo)"
+            Status = hoursPerDay > 4 ? "Rosso (Urgente)" : hoursPerDay > 2 ? "Giallo (Attenzione)" : "Verde (Tranquillo)"
         };
     }
     [HttpGet("{id}/piano-giornaliero")]
@@ -58,6 +58,41 @@ public class ExamsController : ControllerBase
         return new {
             Esame = exam.Title,
             Suggerimento = plan
+        };
+    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteExam(int id)
+    {
+        var exam = await _context.Exams.FindAsync(id);
+        if (exam == null)
+        {
+            return NotFound(); // Se l'ID non esiste
+        }
+
+        _context.Exams.Remove(exam);
+        await _context.SaveChangesAsync();
+
+        return NoContent(); // Risposta 204: Successo senza contenuto
+    }
+    [HttpGet("summary")]
+    public async Task<ActionResult<object>> GetGlobalSummary([FromServices] StudyPlannerPro.Services.PlannerService planner)
+    {
+        var exams = await _context.Exams.ToListAsync();
+        double totalHoursToday = 0;
+
+        foreach (var exam in exams)
+        {
+            int daysLeft = planner.GetDaysRemaining(exam.ExamDate);
+            if (daysLeft > 0)
+            {
+                // Sommiamo (Ore Totali / Giorni Rimasti) per ogni esame
+                totalHoursToday += exam.EstimatedTotalHours / daysLeft;
+            }
+        }
+
+        return new {
+            TotalHours = Math.Round(totalHoursToday, 1),
+            Message = totalHoursToday > 6 ? "Giornata intensa! 😰" : "Carico gestibile. 👍"
         };
     }
 }

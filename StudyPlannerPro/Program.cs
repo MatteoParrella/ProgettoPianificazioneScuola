@@ -1,33 +1,38 @@
 using Microsoft.EntityFrameworkCore;
 using StudyPlannerPro.Data;
+using StudyPlannerPro.Services; // Assicurati che questo namespace sia corretto
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Aggiungi il supporto per i Controller (fondamentale per le API)
+// 1. SERVICES
 builder.Services.AddControllers();
-
-// 2. Configurazione Swagger/OpenAPI (per testare le API)
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // Più comune di AddOpenApi per iniziare
+builder.Services.AddSwaggerGen();
 
-// 3. Il tuo database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=studyplanner.db"));
 
-builder.Services.AddScoped<StudyPlannerPro.Services.PlannerService>();
+// Registrazione del servizio per l'algoritmo
+builder.Services.AddScoped<PlannerService>(); 
 
 var app = builder.Build();
 
-// Configura la pipeline HTTP
+// 2. MIDDLEWARE PIPELINE
 if (app.Environment.IsDevelopment())
 {
-    // Attiva l'interfaccia grafica per testare le API
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Spostiamo i file statici PRIMA di tutto il resto
+app.UseDefaultFiles(); 
+app.UseStaticFiles();
 
-// 4. Mappa i controller (questo sostituisce i MapGet manuali)
+// Commentiamo questa se hai ancora l'errore "Failed to determine https port"
+// app.UseHttpsRedirection(); 
+
+app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
