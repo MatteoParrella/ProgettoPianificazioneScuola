@@ -1,38 +1,52 @@
-# 📚 School Planner - Gestione Didattica Intelligente
+# 🏫 School Planner (C# / .NET)
 
-**School Planner** è una piattaforma progettata per semplificare la gestione della vita scolastica. Il sistema permette di pianificare l'orario settimanale, monitorare l'andamento dei voti e gestire il registro delle materie, tutto in un'unica interfaccia intuitiva e veloce.
-
----
-
-## 🌟 Funzionalità Principali
-
-- 🗓️ **Pianificazione Orario**: Visualizzazione e gestione dell'orario scolastico settimanale.
-- ✍️ **Registro Voti**: Inserimento e calcolo automatico della media ponderata per ogni materia.
-- 📖 **Database Materie**: Organizzazione delle materie con relativi docenti e note specifiche.
-- 📊 **Monitoraggio Rendimento**: Statistiche visive per identificare le materie che necessitano di più studio.
-- 🔔 **Promemoria Verifiche**: Sistema di scadenze per compiti in classe ed interrogazioni.
+**School Planner** è un'applicazione desktop sviluppata in **C#** dedicata alla gestione completa della carriera scolastica. Il software permette di organizzare l'orario, memorizzare i voti e calcolare le medie in modo locale e sicuro.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Caratteristiche Tecniche
 
-- **Frontend**: React / Next.js
-- **Database**: Supabase (PostgreSQL)
-- **Styling**: Tailwind CSS / CSS Modules
-- **State Management**: React Hooks (useState, useEffect)
+- **Linguaggio**: C#
+- **Framework**: .NET (Windows Forms / WPF)
+- **Archiviazione**: [Scegli tra: SQL Server / SQLite / JSON file]
+- **Paradigma**: Programmazione Orientata agli Oggetti (OOP) con classi dedicate per `Studente`, `Materia` e `Voto`.
 
 ---
 
-## ⚙️ Configurazione e Installazione
+## 🌟 Funzionalità
 
-### 1. Requisiti
-- **Node.js** (versione 18 o superiore)
-- Un account **Supabase** per il database.
+- 📅 **Orario Settimanale**: Visualizzazione tabellare delle lezioni giornaliere.
+- 📈 **Gestione Medie**: Algoritmo in C# per il calcolo automatico della media aritmetica e ponderata.
+- 📁 **Salvataggio Dati**: Serializzazione dei dati per mantenere le informazioni salvate alla chiusura del programma.
+- 🔍 **Filtri Materia**: Ricerca rapida delle valutazioni per singola disciplina.
 
-### 2. Setup Locale
-```bash
-# Entra nella cartella del progetto
-cd scuola-planner
+---
 
-# Installa le dipendenze
-npm install
+## 💻 Requisiti di Sistema
+
+- Sistema Operativo: Windows 10/11
+- Ambiente di Sviluppo: **Visual Studio 2022** (o VS Code con C# Dev Kit)
+- Runtime: .NET SDK installato
+
+---
+
+## 🚀 Come avviare il progetto
+
+1. Apri il file della soluzione `.sln` con **Visual Studio**.
+2. Ripristina i pacchetti NuGet (se presenti).
+3. Premi **F5** o il tasto "Avvia" per compilare ed eseguire l'applicazione.
+
+---
+
+## 📌 Struttura del Codice (Esempio Classi)
+
+```csharp
+public class Materia {
+    public string Nome { get; set; }
+    public List<double> Voti { get; set; } = new List<double>();
+    
+    public double CalcolaMedia() {
+        if (Voti.Count == 0) return 0;
+        return Voti.Average();
+    }
+}
